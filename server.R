@@ -24,6 +24,8 @@ theme_315 <- function(angle = 90) {
 
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
+genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
+
 
 shinyServer(function(input, output) {
 
@@ -105,6 +107,18 @@ shinyServer(function(input, output) {
            title = "Correlation heap map of continuous variables")
     print(ggplotly(p, height = 1000, width = 1000, 
                    tooltip = c("Var1", "Var2")))
+  })
+  
+  output$time_series_plot <- renderPlot({
+    
+    movies_by_year <- filter(movie_expanded, genre %in% input$checkedGenres) %>% 
+      group_by(title_year, genre) %>% count(title_year)
+    
+    ggplot(movies_by_year, aes(x = title_year, y = n), 
+           xlab = "Duration (minutes)",
+           main = "Geyser eruption duration") + 
+      geom_line(aes(color = genre))
+    
   })
   
 

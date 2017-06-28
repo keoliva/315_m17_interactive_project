@@ -10,6 +10,8 @@ sidebar <- dashboardSidebar(
     menuItem("Item 2", icon = icon("th"), tabName = "dendrogram",
              badgeLabel = "new", badgeColor = "green"),
     menuItem("Item 3", icon = icon("th"), tabName = "correlation",
+             badgeLabel = "new", badgeColor = "green"),
+    menuItem("Item 4", icon = icon("th"), tabName = "time_series",
              badgeLabel = "new", badgeColor = "green")
   )
 )
@@ -114,6 +116,19 @@ body <- dashboardBody(
                            value = 0, min = -1, max = 1, step = 0.2
                          )
                       )
+            )
+    ),
+    tabItem(tabName = "time_series",
+            fluidRow(
+              selectInput(inputId = "checkedGenres",
+                          multiple = T,
+                          label = h3("The genres are ordered from most common to rarest."), 
+                          choices = genreChoices,
+                          selected = list("Drama", "Comedy", "Thriller")
+              )
+            ),
+            fluidRow(
+              plotOutput(outputId = "time_series_plot", height = "300px")
             )
     )
   )
