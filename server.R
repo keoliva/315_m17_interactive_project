@@ -13,6 +13,8 @@ library(dplyr)
 library(wordcloud)
 library(tidytext)
 library(tidyr)
+library(igraph)
+library(ggraph)
 
 
 # don't use this for final version
@@ -238,6 +240,82 @@ shinyServer(function(input, output) {
               max.words = 50)
     
   })
+  
+  #------------------------------   Network   -------------------------------#
+  
+  output$network_plot <- renderPlot({
+    
+    library(ggplot2)
+    library(dplyr)
+    library(igraph)
+    library(ggraph)
+    
+    movies <- read_csv("data/imdb.csv")
+    
+    
+    grossing <- movies %>% dplyr::select(director_name, gross)
+    grossing <- grossing[complete.cases(grossing), ]
+    avg_gross <- grossing %>% group_by(director_name) %>%
+      dplyr::summarise(mean_gross = mean(gross))
+    
+    
+    gross  <- avg_gross[order(avg_gross$mean_gross,decreasing = TRUE),] 
+    
+    gross <- head(gross, n = 50)
+    
+    movies <- movies %>% dplyr::select(director_name, actor_1_name, actor_2_name, actor_3_name)
+    movies <-left_join(x = gross, y = movies, by = "director_name")
+    
+    movies <- movies %>% dplyr::select(director_name, actor_1_name, actor_2_name, actor_3_name) 
+    
+    movies <- movies[complete.cases(movies), ]
+    
+    movie_edges <- as.data.frame(matrix(0, ncol = 2, nrow = 0))
+    movie_vertices <- as.data.frame(matrix(0, ncol = 1, nrow = 0))
+    
+    movie_edges <- setNames(movie_edges, c("director","actor"))
+    
+    for(i in 1:nrow(movies)) {
+      movie <- movies[i,]
+      
+      director <- movie$director_name
+      movie_vertices[nrow(movie_vertices) + 1,] = director
+      
+      actor1 <- movie$actor_1_name
+      movie_edges[nrow(movie_edges) + 1,] = c(director,actor1)
+      movie_vertices[nrow(movie_vertices) + 1,] = c(actor1)
+      
+      actor2 <- movie$actor_2_name
+      movie_edges[nrow(movie_edges) + 1,] = c(director,actor2)
+      movie_vertices[nrow(movie_vertices) + 1,] = c(actor2)
+      
+      actor3 <- movie$actor_3_name
+      movie_edges[nrow(movie_edges) + 1,] = c(director,actor3)
+      movie_vertices[nrow(movie_vertices) + 1,] = c(actor3)
+    }
+    
+    Mnet <- fortify(as.edgedf(movie_edges), data = movies)
+    
+    Mnet <- Mnet %>% dplyr::select(from_id, to_id)
+    
+    movie_vertices <- unique(movie_vertices[,1])
+    
+    Mnet <- setNames(Mnet, c("director_name","actor"))
+    movies <-left_join(x = gross, y = Mnet, by = "director_name")
+    movies <- unique(movies)
+    
+    movies <- movies %>% dplyr::select(director_name, actor, mean_gross)
+    
+    
+    movie_graph <- graph_from_data_frame(movies, directed = FALSE, vertices = movie_vertices)
+    
+    
+    network <- ggraph(movie_graph, layout = input$v_method) + geom_edge_link() + geom_node_point()
+    network <- network + theme_void()
+    
+    return(network)
+    
+  }, height = 400)
   
 
 })

@@ -19,16 +19,12 @@ genreChoices <- levels(fct_infreq(movie_expanded$genre))
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Item 1", icon = icon("th"), tabName = "boxplot",
-             badgeLabel = "new", badgeColor = "green"),
-    menuItem("Item 2", icon = icon("th"), tabName = "dendrogram",
-             badgeLabel = "new", badgeColor = "green"),
-    menuItem("Item 3", icon = icon("th"), tabName = "correlation",
-             badgeLabel = "new", badgeColor = "green"),
-    menuItem("Item 4", icon = icon("th"), tabName = "time_series",
-             badgeLabel = "new", badgeColor = "green"),
-    menuItem("Item 5", icon = icon("th"), tabName = "wordcloud",
-             badgeLabel = "new", badgeColor = "green")
+    menuItem("Item 1", icon = icon("th"), tabName = "boxplot"),
+    menuItem("Item 2", icon = icon("th"), tabName = "dendrogram"),
+    menuItem("Item 3", icon = icon("th"), tabName = "correlation"),
+    menuItem("Item 4", icon = icon("th"), tabName = "time_series"),
+    menuItem("Item 5", icon = icon("th"), tabName = "network"),
+    menuItem("Item 6", icon = icon("th"), tabName = "wordcloud")
   )
 )
 
@@ -148,6 +144,24 @@ body <- dashboardBody(
             )
     ),
     
+    #network
+    
+    tabItem(tabName = "network",
+            fluidRow(             
+              box(title = "Network", status = "primary", solidHeader = TRUE,
+                  width = 12,
+                  selectInput(inputId = "v_method",
+                                        label = "Visualization Method:",
+                                        choices = c("Fruchterman–Reingold" = "fr", 
+                                                    "Kamada-Kawai" = "kk"),
+                                        selected = "kk"))),
+              
+           
+              plotOutput(outputId = "network_plot", height = "300px")
+            
+    ),
+            
+
     # wordcloud
     tabItem(tabName = "wordcloud",
             
@@ -170,9 +184,9 @@ body <- dashboardBody(
               
             )
     )
-    
-  )
-)
+  ))
+  
+
 
 # Put them together into a dashboardPage
 dashboardPage(
