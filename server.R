@@ -215,13 +215,14 @@ shinyServer(function(input, output) {
   })
   
   #------------------------------   Network   -------------------------------#
+  output$network_plot <- renderVisNetwork({
   
-  output$network_plot <- renderPlot({
-    
     library(ggplot2)
     library(dplyr)
     library(igraph)
     library(ggraph)
+    library(tidyverse)
+    library(visNetwork)
     
     movies <- read_csv("data/imdb.csv")
     
@@ -234,7 +235,7 @@ shinyServer(function(input, output) {
     
     gross  <- avg_gross[order(avg_gross$mean_gross,decreasing = TRUE),] 
     
-    gross <- head(gross, n = 50)
+    gross <- head(gross, n = 25)
     
     movies <- movies %>% dplyr::select(director_name, actor_1_name, actor_2_name, actor_3_name)
     movies <-left_join(x = gross, y = movies, by = "director_name")
@@ -244,51 +245,55 @@ shinyServer(function(input, output) {
     movies <- movies[complete.cases(movies), ]
     
     movie_edges <- as.data.frame(matrix(0, ncol = 2, nrow = 0))
-    movie_vertices <- as.data.frame(matrix(0, ncol = 1, nrow = 0))
     
-    movie_edges <- setNames(movie_edges, c("director","actor"))
+    # id, label
+    movie_vertices <- as.data.frame(matrix(0, ncol = 2, nrow = 0))
+    
+    movie_edges <- setNames(movie_edges, c("from","to"))
+    movie_vertices <- setNames(movie_edges, c("label","id"))
     
     for(i in 1:nrow(movies)) {
       movie <- movies[i,]
       
       director <- movie$director_name
-      movie_vertices[nrow(movie_vertices) + 1,] = director
-      
       actor1 <- movie$actor_1_name
-      movie_edges[nrow(movie_edges) + 1,] = c(director,actor1)
-      movie_vertices[nrow(movie_vertices) + 1,] = c(actor1)
-      
       actor2 <- movie$actor_2_name
-      movie_edges[nrow(movie_edges) + 1,] = c(director,actor2)
-      movie_vertices[nrow(movie_vertices) + 1,] = c(actor2)
-      
       actor3 <- movie$actor_3_name
-      movie_edges[nrow(movie_edges) + 1,] = c(director,actor3)
-      movie_vertices[nrow(movie_vertices) + 1,] = c(actor3)
+      
+      if (!director %in% movie_vertices$label){
+        movie_vertices[nrow(movie_vertices) + 1,] = c(director, nrow(movie_vertices) + 1)
+      }
+      
+      if (!actor1 %in% movie_vertices$label){
+        movie_vertices[nrow(movie_vertices) + 1,] = c(actor1, nrow(movie_vertices) + 1)
+      }
+      
+      if (!actor2 %in% movie_vertices$label){
+        movie_vertices[nrow(movie_vertices) + 1,] = c(actor2, nrow(movie_vertices) + 1)
+      }
+      
+      if (!actor3 %in% movie_vertices$label){
+        movie_vertices[nrow(movie_vertices) + 1,] = c(actor3, nrow(movie_vertices) + 1)
+      }
+      
+      
+      
+      movie_edges[nrow(movie_edges) + 1,] = c(movie_vertices[movie_vertices$label == director, 2],
+                                              movie_vertices[movie_vertices$label == actor1, 2])
+      
+      movie_edges[nrow(movie_edges) + 1,] = c(movie_vertices[movie_vertices$label == director, 2],
+                                              movie_vertices[movie_vertices$label == actor2, 2])
+      
+      movie_edges[nrow(movie_edges) + 1,] = c(movie_vertices[movie_vertices$label == director, 2],
+                                              movie_vertices[movie_vertices$label == actor3, 2])
+      
+      
+      
+      
     }
-    
-    Mnet <- fortify(as.edgedf(movie_edges), data = movies)
-    
-    Mnet <- Mnet %>% dplyr::select(from_id, to_id)
-    
-    movie_vertices <- unique(movie_vertices[,1])
-    
-    Mnet <- setNames(Mnet, c("director_name","actor"))
-    movies <-left_join(x = gross, y = Mnet, by = "director_name")
-    movies <- unique(movies)
-    
-    movies <- movies %>% dplyr::select(director_name, actor, mean_gross)
-    
-    
-    movie_graph <- graph_from_data_frame(movies, directed = FALSE, vertices = movie_vertices)
-    
-    
-    network <- ggraph(movie_graph, layout = input$v_method) + geom_edge_link() + geom_node_point()
-    network <- network + theme_void()
-    
-    return(network)
-    
-  }, height = 400)
+  
+  visNetwork(movie_vertices, movie_edges)
+  })
   #------------------------------ Scatter Plot -----------------------------#
   output$scatter <- renderPlotly({
     m <- movie_expanded
