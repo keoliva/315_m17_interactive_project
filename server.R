@@ -15,6 +15,8 @@ library(tidytext)
 library(tidyr)
 library(igraph)
 library(ggraph)
+library(networkD3)
+library(geomnet)
 
 
 # don't use this for final version
