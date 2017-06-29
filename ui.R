@@ -12,6 +12,21 @@ library(plotly)
 library(shinydashboard)
 library(forcats)
 
+library(tidyverse)
+
+library(ggplot2)
+library(shiny)
+library(dendextend)
+library(reshape2)
+library(visNetwork)
+library(dplyr)
+library(wordcloud)
+library(tidytext)
+library(tidyr)
+library(igraph)
+library(ggraph)
+library(networkD3)
+
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
 genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
