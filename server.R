@@ -317,7 +317,7 @@ shinyServer(function(input, output) {
     
     p <- p + theme_bw() +
       scale_color_brewer(type = "qual", palette = "Set2", direction = -1) +
-      coord_cartesian(ylim = c(6, 24)) +
+      coord_cartesian() +
       labs(x = "Log transformed number of reviews",
            y = "Log transformed gross",
            title = "Distribution of number of reviews versus gross")
