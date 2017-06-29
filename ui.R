@@ -141,7 +141,7 @@ body <- dashboardBody(
               
            
             fluidPage(
-              visNetworkOutput("network_plot", height = "90%"))
+              visNetworkOutput("network_plot", height = "800px"))
             
     ),
             
