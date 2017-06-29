@@ -149,35 +149,6 @@ shinyServer(function(input, output) {
     cormat <-cormat[hc$order, hc$order]
   }
   
-  #################### plots #####################
-  output$boxplot <- renderPlotly({
-    if(input$boxplot_sort == "by median") {
-      f <- median
-    }
-    if(input$boxplot_sort == "by min"){
-      f <- min
-    }
-    if(input$boxplot_sort == "by max") {
-      f <- max
-    }
-    if(input$boxplot_sort == "by count"){
-      f <- length
-    }    
-    
-    p <- ggplot(movie, 
-                aes(x = reorder(country, imdb_score, FUN=f), 
-                    y = imdb_score)) + 
-      geom_boxplot() + theme_315(90) +
-      labs(x = "Countries", y = "IMDB rating", 
-           title = "Distribution of IMDB rating across countries")
-    print(ggplotly(p, height = 500, width = 1000))
-  })
-  
-  output$dendrogram <- renderPlot({
-    dend <- t(movie_cont) %>% scale %>% dist %>% hclust %>% as.dendrogram
-    p <- ggplot(dend, horiz = T)
-    return(p)
-  })
   
   output$corr_heatmap <- renderPlotly({
     
@@ -318,6 +289,41 @@ shinyServer(function(input, output) {
     return(network)
     
   }, height = 400)
-  
+  #------------------------------ Scatter Plot -----------------------------#
+  output$scatter <- renderPlotly({
+    m <- movie_expanded
+    m$domestic <- with(m, country == "USA")
+    m <- filter(m, 0 < gross & num_user_for_reviews > 0)
+    # m <- filter(m, genre %in% input$checkedGenres_scatter) 
+    
+    # m <- filter(m, content_rating %in% input$checkedRatings & 
+    #                title_year == as.numeric(input$year))
+    
+    m <- filter(m, content_rating %in% input$checkedRatings)
+    
+    p <- ggplot(m, aes(x = log(num_user_for_reviews), y = log(gross)))
+    
+    
+    if(!input$hide_points){
+      p<- p + geom_point(aes(col = content_rating), size = 1, alpha = .6)
+    }
+    
+    if(input$display_overall_spline){
+      p <- p + geom_smooth(method = "lm")
+    }
+    
+    if(input$display_genre_spline){
+      p <- p + geom_smooth(aes(col = content_rating),
+                           method = "lm")
+    }
+    
+    p <- p + theme_bw() +
+      scale_color_brewer(type = "qual", palette = "Set2", direction = -1) +
+      coord_cartesian(ylim = c(6, 24)) +
+      labs(x = "Log transformed number of reviews",
+           y = "Log transformed gross",
+           title = "Distribution of number of reviews versus gross")
+    print(ggplotly(p, height = 600, width = 1000))
+  })
 
 })

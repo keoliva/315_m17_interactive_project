@@ -30,16 +30,16 @@ library(networkD3)
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
 genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
+ratingChoices <- levels(fct_infreq(movie_expanded$content_rating)) 
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Item 1", icon = icon("th"), tabName = "boxplot"),
-    menuItem("Item 2", icon = icon("th"), tabName = "dendrogram"),
     menuItem("Item 3", icon = icon("th"), tabName = "correlation"),
     menuItem("Item 4", icon = icon("th"), tabName = "time_series"),
     menuItem("Item 5", icon = icon("th"), tabName = "network"),
-    menuItem("Item 6", icon = icon("th"), tabName = "wordcloud")
+    menuItem("Item 6", icon = icon("th"), tabName = "wordcloud"),
+    menuItem("Item 7", icon = icon("th"), tabName = "scatterplot")
   )
 )
 
@@ -97,35 +97,6 @@ body <- dashboardBody(
                      tags$a(img(src="imdb-logo.jpg"), href="https://www.imdb.com"))
     ),
     
-    tabItem(tabName = "boxplot",
-            fluidRow(             
-              box(
-                title = "Boxplot", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12, 
-                plotlyOutput("boxplot", width = "auto", height = "auto")
-              )
-            ),
-            fluidRow(
-              box(
-                title = "Inputs", status = "warning", solidHeader = TRUE,
-                "By default, boxplot for each country are sorted by median", 
-                br(), "More sorting options are supported",
-                selectInput(
-                  label = "Select Sorting Criteria:",
-                  inputId = "boxplot_sort",
-                  selected = "by median",
-                  choices = c("by median", "by count", "by max", "by min"))
-              )
-            )
-    ),
-    tabItem(tabName = "dendrogram",
-            fluidRow(             
-              box(title = "Dendrogram", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("dendrogram")
-              )
-            )
-    ),
     tabItem(tabName = "correlation",
             fluidRow(             
               box(title = "Correlation Heatmap", status = "primary", 
@@ -198,6 +169,34 @@ body <- dashboardBody(
               column(width = 5, offset = 1)
               
             )
+    ),
+    tabItem(tabName = "scatterplot",
+            fluidRow(box(title = "Select Content Rating and year", status = "warning", solidHeader = T,
+                         selectInput(inputId = "checkedRatings",
+                                     multiple = T,
+                                     label = "Content ratings are ordered from most common to rarest. Select content ratings to dispay:", 
+                                     choices = ratingChoices,
+                                     selected = list("R", "PG-13", "PG"))),
+                     # sliderInput(inputId = "year",
+                     #             value = 1993,
+                     #             min = 1990, max = 2016, step = 1,
+                     #             label = "Choose a year to display")), 
+                     box(title = "Control Regression Curve and Points", status = "warning", solidHeader = T,
+                         checkboxInput(inputId = "display_genre_spline",
+                                       label = "Check to display fitted regression curve for all ratings selected", 
+                                       value = F),
+                         checkboxInput(inputId = "display_overall_spline",
+                                       label = "Check to display fitted regression curve for all movies", 
+                                       value = F),
+                         checkboxInput(inputId = "hide_points",
+                                       label = "Check to hide all points", 
+                                       value = F)
+                     )),
+            fluidRow(box(title = "Scatter Plot", status = "primary", solidHeader = T,
+                         width=12,
+                         plotlyOutput(outputId = "scatter", height = "auto",
+                                      width = "auto")
+            ))
     )
   ))
   
