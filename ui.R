@@ -1,6 +1,20 @@
+# File : ui.R
+# Project : 36-315 Interactive Project
+# Group : Movie Buffs
+# Date : June 29, 2017
+
+########################################################################
+#############################   Libraries   ############################
+########################################################################
+
 library(markdown)
 library(plotly)
 library(shinydashboard)
+library(forcats)
+
+movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
+
+genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -12,6 +26,8 @@ sidebar <- dashboardSidebar(
     menuItem("Item 3", icon = icon("th"), tabName = "correlation",
              badgeLabel = "new", badgeColor = "green"),
     menuItem("Item 4", icon = icon("th"), tabName = "time_series",
+             badgeLabel = "new", badgeColor = "green"),
+    menuItem("Item 5", icon = icon("th"), tabName = "wordcloud",
              badgeLabel = "new", badgeColor = "green")
   )
 )
@@ -130,7 +146,31 @@ body <- dashboardBody(
             fluidRow(
               plotOutput(outputId = "time_series_plot", height = "300px")
             )
+    ),
+    
+    # wordcloud
+    tabItem(tabName = "wordcloud",
+            
+            # top row
+            fluidRow (
+              
+              # checkboxes for contour map, heat map, and scatter plot
+              column(width = 5, offset = 1)
+              
+            ),
+            
+            # main plot
+            plotOutput(outputId = "main_plot_wordcloud", height = "300px"),
+            
+            # bottom row                  
+            fluidRow(
+              
+              # sliders for contour map and heat map
+              column(width = 5, offset = 1)
+              
+            )
     )
+    
   )
 )
 

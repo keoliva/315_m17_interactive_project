@@ -1,8 +1,18 @@
+
+
+########################################################################
+#############################   Libraries   ############################
+########################################################################
+
 library(ggplot2)
 library(shiny)
 library(dendextend)
 library(reshape2)
 library(visNetwork)
+library(dplyr)
+library(wordcloud)
+library(tidytext)
+library(tidyr)
 
 
 # don't use this for final version
@@ -10,9 +20,7 @@ library(visNetwork)
 #                   "rating_prediction/master/movie_metadata.csv", sep = "")
 # movie <- read.csv(data_url, header = T)
 
-movie <- read.csv("data/movie_metadata.csv", header = T)
-movie_cont <- read.csv("data/movie_cont.csv", header = T)
-movie_cont <- movie_cont[, -1]
+
 theme_315 <- function(angle = 90) { 
   theme_bw() +
   theme(axis.text = element_text(size = 11, color = "dodgerblue4"),
@@ -22,9 +30,104 @@ theme_315 <- function(angle = 90) {
   )
 }
 
+
+########################################################################
+###############################   Data   ###############################
+########################################################################
+
+movie <- read.csv("data/movie_metadata.csv", header = T)
+movie_cont <- read.csv("data/movie_cont.csv", header = T)
+movie_cont <- movie_cont[, -1]
+
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
 genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
+
+
+movies <- movie
+# transform movie_title column from factor type to character type
+movies <-
+  mutate(movies, movie_title = sapply(movies$movie_title, as.character))
+
+# transform genres column from factor type to character type
+movies <-
+  mutate(movies, genres = sapply(movies$genres, as.character))
+
+# transform plot_keywords column from factor type to character type
+movies <-
+  mutate(movies, plot_keywords = sapply(movies$plot_keywords, as.character))
+
+
+########################################################################
+#########################   Helper Functions   #########################
+########################################################################
+
+
+#------------------------   Word Cloud Helpers  ------------------------#
+
+unnest_plot_keywords <- function() {
+  dataset <- movies %>%
+    mutate(plot_keywords = strsplit(plot_keywords, '\\|')) %>%
+    unnest(plot_keywords)
+  return (dataset)
+}
+
+unnest_genres <- function() {
+  dataset <- movies %>%
+    mutate(genres = strsplit(genres, '\\|')) %>%
+    unnest(genres)
+  return (dataset)
+}
+
+get_plot_keywords_freq <- function() {
+  
+  # unnest the plot keywords
+  movies_plot_keywords <- unnest_plot_keywords()
+  
+  # group by plot keywords and count frequency
+  plot_keywords_freq <-
+    movies_plot_keywords %>%
+    dplyr::select(plot_keywords) %>%
+    filter(!(is.na(plot_keywords))) %>%
+    group_by(plot_keywords) %>%
+    summarize(n = n())
+  
+  return (plot_keywords_freq)
+}
+
+plot_keywords_freq <- get_plot_keywords_freq()
+
+
+get_plot_keywords_avg_gross <- function() {
+  
+  # unnest the plot keywords
+  movies_plot_keywords <- unnest_plot_keywords()
+  
+  # group by plot keywords and calculate average gross
+  plot_keywords_avg_gross <-
+    movies_plot_keywords %>%
+    dplyr::select(gross, plot_keywords) %>%
+    filter(!(is.na(gross))) %>%
+    group_by(plot_keywords) %>%
+    summarize(avg_gross = mean(gross))
+  
+  return (plot_keywords_avg_gross)
+}
+
+plot_keywords_avg_gross <- get_plot_keywords_avg_gross()
+
+
+get_plot_keywords_top_freq <- function(dataset, n) {
+  new_dataset <-
+    dataset %>%
+    inner_join(plot_keywords_freq)
+  return (new_dataset)
+}
+
+
+########################################################################
+#############################   Server   ###############################
+########################################################################
 
 
 shinyServer(function(input, output) {
@@ -118,6 +221,21 @@ shinyServer(function(input, output) {
            xlab = "Duration (minutes)",
            main = "Geyser eruption duration") + 
       geom_line(aes(color = genre))
+    
+  })
+  
+  
+  #----------------------------   Word Cloud   ----------------------------#
+  
+  output$main_plot_wordcloud <- renderPlot({
+    
+    wordcloud(words = plot_keywords_freq$plot_keywords,
+              freq = plot_keywords_freq$n,
+              scale = c(3.5, 0.5),
+              rot.per = 0.2,
+              random.order = FALSE,
+              colors = brewer.pal(8, "Dark2"),
+              max.words = 50)
     
   })
   
