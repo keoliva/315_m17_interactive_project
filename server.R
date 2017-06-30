@@ -224,7 +224,7 @@ shinyServer(function(input, output) {
     library(tidyverse)
     library(visNetwork)
     
-    movies <- read_csv("data/imdb.csv")
+    movies <- read_csv("data/movie_metadata.csv")
     
     
     grossing <- movies %>% dplyr::select(director_name, gross)
@@ -235,7 +235,7 @@ shinyServer(function(input, output) {
     
     gross  <- avg_gross[order(avg_gross$mean_gross,decreasing = TRUE),] 
     
-    gross <- head(gross, n = 25)
+    gross <- head(gross, n = 40)
     
     movies <- movies %>% dplyr::select(director_name, actor_1_name, actor_2_name, actor_3_name)
     movies <-left_join(x = gross, y = movies, by = "director_name")
@@ -294,6 +294,61 @@ shinyServer(function(input, output) {
   
   visNetwork(movie_vertices, movie_edges)
   })
+  
+  #------------------------------ Bar Plot -----------------------------#
+  output$bar_plot <- renderPlot({
+  
+    
+    movies <- read_csv("data/movie_metadata.csv")
+    
+    movies <- movies %>% dplyr::select(content_rating, title_year, gross, budget, imdb_score, duration)
+    
+    movies <- movies %>% filter(title_year > 1985, content_rating == "PG-13" | content_rating == "G" | content_rating == "R" | content_rating == "PG")
+    
+    movies <- movies %>% group_by(content_rating) %>% 
+      summarise(mean_gross = mean(gross, na.rm = TRUE) ,
+                mean_budget = mean(budget, na.rm = TRUE) ,
+                mean_score = mean(imdb_score, na.rm = TRUE) ,
+                mean_duration = mean(duration, na.rm = TRUE))
+    
+    if (!input$show_gross) {
+      movies <- movies %>% select(-one_of(c("mean_gross")))
+    }
+    
+    if (!input$show_budget) {
+      movies <- movies %>% select(-one_of(c("mean_budget")))
+    }
+    
+    if (!input$show_duration) {
+      movies <- movies %>% select(-one_of(c("mean_duration")))
+    }
+    
+    if (!input$show_score) {
+      movies <- movies %>% select(-one_of(c("mean_score")))
+    }
+    
+    
+    
+    
+    movies <- melt(movies, id.vars = "content_rating")
+    
+    p <- ggplot(movies, aes(x = content_rating, value)) +  
+      geom_bar(aes(fill = variable), position = "dodge", stat="identity")
+    
+    
+    
+    return(p)
+    
+  })
+  
+  
+  
+  
+  
+  
+  
+  
+  
   #------------------------------ Scatter Plot -----------------------------#
   output$scatter <- renderPlotly({
     m <- movie_expanded
