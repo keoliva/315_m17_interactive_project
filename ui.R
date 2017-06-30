@@ -35,21 +35,11 @@ ratingChoices <- levels(fct_infreq(movie_expanded$content_rating))
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
-<<<<<<< HEAD
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Item 2", icon = icon("th"), tabName = "bar"),
-    menuItem("Item 3", icon = icon("th"), tabName = "correlation"),
-    menuItem("Item 4", icon = icon("th"), tabName = "time_series"),
-    menuItem("Item 5", icon = icon("th"), tabName = "network"),
-    menuItem("Item 6", icon = icon("th"), tabName = "wordcloud"),
-    menuItem("Item 7", icon = icon("th"), tabName = "scatterplot")
-=======
     menuItem("Correlation", icon = icon("th"), tabName = "correlation"),
     menuItem("Time Series", icon = icon("th"), tabName = "time_series"),
     menuItem("Network", icon = icon("th"), tabName = "network"),
     menuItem("Wordcloud", icon = icon("th"), tabName = "wordcloud"),
     menuItem("Scatter Plot", icon = icon("th"), tabName = "scatterplot")
->>>>>>> ab09c4690e2c7755774b7896ccddda3ade663243
   )
 )
 
@@ -107,26 +97,6 @@ body <- dashboardBody(
             fluidRow(box(includeMarkdown("doc/about.md")),
                      tags$a(img(src="imdb-logo.jpg"), href="https://www.imdb.com"))
     ),
-    tabItem(tabName = "bar",
-            box(title = "Comparison of Movies based on Content Ratings",             
-              checkboxInput(inputId = "show_gross", 
-                            label = "Show Gross", 
-                            value = TRUE),
-              
-              checkboxInput(inputId = "show_budget", 
-                            label = "Show Budget", 
-                            value = TRUE),
-              
-              checkboxInput(inputId = "show_duration", 
-                            label = "Show Duration", 
-                            value = FALSE),
-              
-              checkboxInput(inputId = "show_score", 
-                            label = "Show IMDB Score", 
-                            value = FALSE)), 
-            plotOutput(outputId = "bar_plot", height = "600px")
-    ),
-    
     
     tabItem(tabName = "correlation",
             fluidRow(             
