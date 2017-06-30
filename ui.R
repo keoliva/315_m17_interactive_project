@@ -25,8 +25,10 @@ library(tidytext)
 library(tidyr)
 library(igraph)
 library(ggraph)
+library(base)
 
 library(visNetwork)
+library(dygraphs)
 
 ########################################################################
 #############################   Constants   ############################
