@@ -28,10 +28,24 @@ library(ggraph)
 
 library(visNetwork)
 
+########################################################################
+#############################   Constants   ############################
+########################################################################
+
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
 genreChoices <- levels(fct_infreq(movie_expanded$genre)) 
 ratingChoices <- levels(fct_infreq(movie_expanded$content_rating)) 
+
+# constants
+
+title_year_step = 5
+movies <- read.csv("data/movie_metadata.csv", header = T)
+min_title_year = min((movies %>% filter(!(is.na(title_year))))$title_year)
+max_title_year = max((movies %>% filter(!(is.na(title_year))))$title_year)
+
+title_year_lo = floor(min_title_year / title_year_step) * title_year_step
+title_year_hi = ceiling(max_title_year / title_year_step) * title_year_step
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -40,7 +54,8 @@ sidebar <- dashboardSidebar(
     menuItem("Time Series", icon = icon("th"), tabName = "time_series"),
     menuItem("Network", icon = icon("th"), tabName = "network"),
     menuItem("Wordcloud", icon = icon("th"), tabName = "wordcloud"),
-    menuItem("Scatter Plot", icon = icon("th"), tabName = "scatterplot")
+    menuItem("Scatter Plot", icon = icon("th"), tabName = "scatterplot"),
+    menuItem("Genres Bar Chart", icon = icon("th"), tabName = "genres_bar")
   )
 )
 
@@ -173,19 +188,49 @@ body <- dashboardBody(
             # top row
             fluidRow (
               
-              # checkboxes for contour map, heat map, and scatter plot
-              column(width = 5, offset = 1)
+              column(width = 5,
+                     
+                     # select the variable to be visualized
+                     selectInput(inputId = "variable",
+                                 label = "Variable:",
+                                 choices = 
+                                   c("Most Frequency" = "count",
+                                     "Most Budget" = "avg_budget",
+                                     "Most Gross" = "avg_gross",
+                                     "Most User Reviews" = "avg_user_reviews",
+                                     "Most Movie Facebook Likes" = "avg_facebook_likes"),
+                                 selected = "Frequency")
+              ),
+              
+              column(width = 5, offset = 1,
+                     
+                     # select the top n frequent plot keywords
+                     selectInput(inputId = "top_n_freq",
+                                 label = "Plot keywords with frequency in top :",
+                                 choices = 
+                                   c(50, 100, 200, 300, 400, 500, 1000, "All"),
+                                 selected = "All")
+              )
               
             ),
             
             # main plot
-            plotOutput(outputId = "main_plot_wordcloud", height = "300px"),
+            plotOutput(outputId = "main_plot_wordcloud", height = "400px"),
             
             # bottom row                  
             fluidRow(
               
-              # sliders for contour map and heat map
-              column(width = 5, offset = 1)
+              column(width = 5,
+                     
+                     # sliders for year range
+                     
+                     sliderInput(inputId = "title_year",
+                                 label = "Movies produced within year range:",
+                                 step = title_year_step,
+                                 min = title_year_lo,
+                                 max = title_year_hi,
+                                 value = c(min, max))
+              )
               
             )
     ),
@@ -216,6 +261,51 @@ body <- dashboardBody(
                          plotlyOutput(outputId = "scatter", height = "auto",
                                       width = "auto")
             ))
+    ),
+    tabItem(tabName = "genres_bar",
+            # top row
+            fluidRow (
+              
+              column(width = 5,
+                     
+                     # select the variable to be visualized
+                     selectInput(inputId = "genre_variable",
+                                 label = "Select the feature of genre",
+                                 choices = 
+                                   c("Facebook Likes" = "total_fb_likes",
+                                     "Number of Reviews" = "total_reviews",
+                                     "Number of Movies" = "total_movies"),
+                                 selected = "total_movies")
+              ),
+              
+              column(width = 5, offset = 1,
+                     
+                     # select the top n frequent plot keywords
+                     checkboxInput(inputId = "genres_sorted",
+                                   label = "Sort the genres",
+                                   value = FALSE)
+              )
+              
+            ),
+            
+            # main plot
+            plotOutput(outputId = "main_plot_genres_barchart", height = "400px"),
+            
+            # bottom row                  
+            fluidRow(
+              
+              column(width = 5,
+                     
+                     # sliders for year range
+                     
+                     sliderInput(inputId = "year_range_genres",
+                                 label = "Year Range",
+                                 min = 1990,
+                                 max = 2010,
+                                 value = c(1990, 2010))
+              )
+              
+            )
     )
   ))
 

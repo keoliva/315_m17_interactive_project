@@ -124,6 +124,17 @@ get_plot_keywords_top_freq <- function(dataset, n) {
 }
 
 
+plot_keywords_attributes <-
+  movies_plot_keywords %>%
+  filter(!(is.na(gross) | is.na(budget))) %>%
+  filter(!(is.na(num_user_for_reviews) | is.na(movie_facebook_likes))) %>%
+  group_by(plot_keywords) %>%
+  summarize(avg_gross = mean(gross),
+            avg_budget = mean(budget),
+            avg_user_reviews = mean(num_user_for_reviews),
+            avg_facebook_likes = mean(movie_facebook_likes),
+            count = n())
+
 ########################################################################
 #############################   Server   ###############################
 ########################################################################
@@ -284,15 +295,44 @@ shinyServer(function(input, output) {
   
   #----------------------------   Word Cloud   ----------------------------#
   
-  output$main_plot_wordcloud <- renderPlot({
+  output$main_plot_wordcloud <- renderPlot ({
     
-    wordcloud(words = plot_keywords_freq$plot_keywords,
-              freq = plot_keywords_freq$n,
-              scale = c(3.5, 0.5),
-              rot.per = 0.2,
-              random.order = FALSE,
-              colors = brewer.pal(8, "Dark2"),
-              max.words = 50)
+    # filter the years
+    plot_keywords_attributes <-
+      movies_plot_keywords %>%
+      filter(!(is.na(title_year))) %>%
+      filter(!(is.na(gross) | is.na(budget))) %>%
+      filter(!(is.na(num_user_for_reviews) | is.na(movie_facebook_likes))) %>%
+      filter(title_year >= input$title_year[1] &
+               title_year <= input$title_year[2]) %>%
+      group_by(plot_keywords) %>%
+      summarize(avg_gross = mean(gross),
+                avg_budget = mean(budget),
+                avg_user_reviews = mean(num_user_for_reviews),
+                avg_facebook_likes = mean(movie_facebook_likes),
+                count = n())
+    
+    # filter top n frequent keywords
+    if (input$top_n_freq != "All") {
+      plot_keywords_attributes <-
+        plot_keywords_attributes[order(plot_keywords_attributes$count,
+                                       decreasing = TRUE), ] %>%
+        head(input$top_n_freq)
+    }
+    
+    plot_keywords_attributes %>%
+      with(wordcloud(words = plot_keywords,
+                     freq = get(input$variable),
+                     scale = c(2, 0.5),
+                     rot.per = 0.2,
+                     max.words = 60,
+                     random.order = FALSE,
+                     colors = brewer.pal(6, "RdBu"),
+                     vfont = c("sans serif", "bold")))
+    title(main = list(paste("Plot Keywords with Most ", input$variable,
+                            "from ", input$title_year[1],
+                            " to ", input$title_year[2])))
+    
     
   })
   
@@ -414,6 +454,65 @@ shinyServer(function(input, output) {
            y = "Log transformed gross",
            title = "Distribution of number of votes versus gross in log scale")
     print(ggplotly(p, height = 600, width = 1000))
+  })
+  
+  #------------------------------ Genres Bar Chart -----------------------------#
+  
+  output$main_plot_genres_barchart <- renderPlot ({
+    
+    
+    # filter the years
+    movies_genres <-
+      movies %>%
+      filter(!is.na(title_year)) %>%
+      filter(input$year_range_genres[1] <= title_year &
+               title_year < (input$year_range_genres)[2])
+    
+    # filter the gross and budget
+    movies_genres <-
+      movies_genres %>%
+      filter((!is.na(gross)) & (!is.na(budget)))
+    
+    movies_genres <-
+      movies_genres %>%
+      mutate(genres = strsplit(genres, '\\|')) %>%
+      unnest(genres) %>%
+      group_by(genres) %>%
+      summarise(total_movies = n(),
+                total_fb_likes = sum(movie_facebook_likes),
+                total_reviews = sum(num_user_for_reviews))
+    
+    if (input$genres_sorted) {
+      movies_genres %>%
+        mutate(genres = fct_reorder(genres, get(input$genre_variable))) %>%
+        mutate(genres = fct_rev(genres)) %>%
+        ggplot(aes(x = genres,
+                   y = get(input$genre_variable))) +
+        geom_bar(stat = "identity",
+                 fill = "brown") +
+        labs(x = "Genre",
+             y = input$genre_variable,
+             title = paste("Distribution of ", input$genre_variable, "of Each Genre",
+                           "from ", input$year_range_genres[1],
+                           " - ", input$year_range_genres[2])) +
+        theme_315 +
+        theme(axis.title.x = element_text(angle = 90))
+    } else {
+      movies_genres %>%
+        ggplot(aes(x = genres,
+                   y = get(input$genre_variable))) +
+        geom_bar(stat = "identity",
+                 fill = "brown") +
+        labs(x = "Genre",
+             y = input$genre_variable,
+             title = paste("Distribution of ", input$genre_variable, "of Each Genre",
+                           "from ", input$year_range_genres[1],
+                           " - ", input$year_range_genres[2])) +
+        theme_315 +
+        theme(axis.text.x = element_text(angle = 90))
+    }
+    
+    
   })
 
 })
