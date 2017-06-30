@@ -38,6 +38,7 @@ sidebar <- dashboardSidebar(
     menuItem("Grouped Bar Graph", icon = icon("th"), tabName = "bar"),
     menuItem("Correlation", icon = icon("th"), tabName = "correlation"),
     menuItem("Time Series", icon = icon("th"), tabName = "time_series"),
+    menuItem("Dendrogram", icon = icon("th"), tabName = "dendrogram"),
     menuItem("Network", icon = icon("th"), tabName = "network"),
     menuItem("Wordcloud", icon = icon("th"), tabName = "wordcloud"),
     menuItem("Scatter Plot", icon = icon("th"), tabName = "scatterplot")
@@ -148,10 +149,24 @@ body <- dashboardBody(
               )
             ),
             fluidRow(
-              plotOutput(outputId = "time_series_plot", height = "300px")
+              dygraphOutput(outputId = "time_series_plot", height = "300px")
             )
     ),
-    
+    tabItem(tabName = "dendrogram",
+            fluidRow(
+              selectInput(inputId = "yearSelected",
+                          label = h3("See the movies who achieved about the same 'success'."),
+                          choices = c(2000:2016),
+                          selected = 2016
+              ),
+              
+              tabsetPanel(id = "dendrogramTabs",
+                          tabPanel("Success with the Audience", value = "audience", plotOutput("dendrogram")),
+                          tabPanel("Commercial Success", value = "commercial"),
+                          tabPanel("Critical Success", value = "critics")
+              )
+            )
+    ),
     #network
     
     tabItem(tabName = "network",

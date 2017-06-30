@@ -4,6 +4,7 @@
 #############################   Libraries   ############################
 ########################################################################
 
+library(dygraphs)
 library(ggplot2)
 library(shiny)
 library(dendextend)
@@ -215,16 +216,69 @@ shinyServer(function(input, output) {
 
   #----------------------------   Time Series   ----------------------------#
   
-  output$time_series_plot <- renderPlot({
+  output$time_series_plot <- renderDygraph({
     
-    movies_by_year <- filter(movie_expanded, genre %in% input$checkedGenres) %>% 
-      group_by(title_year, genre) %>% count(title_year)
+    movies_by_year <- reactive({
+      filter(m, genre %in% input$checkedGenres) %>%
+        group_by(title_year, genre) %>% count(title_year) %>% spread(genre, n)
+    })
+      
+    dygraph(movies_by_year(),  main = "Number of Movies Made Throughout the Years")
     
-    ggplot(movies_by_year, aes(x = title_year, y = n), 
-           xlab = "Duration (minutes)",
-           main = "Geyser eruption duration") + 
-      geom_line(aes(color = genre))
+  })
+  
+  #----------------------------   Dendogram   ----------------------------#
+  get_successful_movies <- function(movies) {
+    audience_success <- movies[order(-movies$imdb_score, -movies$num_voted_users,
+                                     -movies$num_user_for_reviews,
+                                     -movies$movie_facebook_likes),]
     
+    commercial_success <- movies[order(-movies$gross),]
+    
+    critic_success <- movies[order(-movies$gross),]
+    
+    successful_movies <- c(audience_success$movie_title, commercial_success$movie_title)
+    
+    successful_movies <- c(successful_movies, critic_success$movie_title)
+    
+    successful_movies <- unique(as.character(successful_movies[duplicated(successful_movies)]))
+    
+    return(head(successful_movies, n = 30))
+  }
+  
+  base_m <- read_csv("data/base_m.csv")
+  
+  output$dendrogram <- renderPlot({
+    
+    movies_00 <- reactive({ filter(base_m, title_year == input$yearSelected) })
+    
+    successful_movies <- get_successful_movies(movies_00())
+    
+    successful_movies <- filter(base_m, movie_title %in% successful_movies)
+    
+    if (input$dendrogramTabs == "audience") {
+      
+      movies_cont <- dplyr::select(successful_movies, imdb_score, num_voted_users,
+                                   num_user_for_reviews, movie_facebook_likes)
+      
+    } else if (input$dendrogramTabs == "commercial") {
+      
+      movies_cont <- dplyr::select(successful_movies, gross)
+      
+    } else {
+      
+      movies_cont <- dplyr::select(successful_movies, num_critic_for_reviews)
+      
+    }
+    
+    dend <- movies_cont %>% scale %>% dist %>% hclust %>% as.dendrogram
+    
+    colorblind_palette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+    get_colors <- function(x, palette = colorblind_palette) {palette[match(x, unique(x))]}
+    
+    dend %>% #set("labels_col", get_colors(movies_cont$country)) %>%
+      dendextend::set("labels", successful_movies$movie_title, order_value = T) %>%
+      ggplot(horiz = T, size = 6) + labs(title = "Clustering Structure of Movies")
   })
   
   #----------------------------   Bar Plot   ----------------------------#
@@ -237,7 +291,7 @@ shinyServer(function(input, output) {
     library(ggraph)
     library(networkD3)
     
-    movies <- read_csv("imdb.csv")
+    movies <- read_csv("data/imdb.csv")
     
     movies <- movies %>% dplyr::select(content_rating, title_year, gross, budget, imdb_score, duration)
     
