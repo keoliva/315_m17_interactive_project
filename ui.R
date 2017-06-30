@@ -318,8 +318,8 @@ body <- dashboardBody(
                      sliderInput(inputId = "year_range_genres",
                                  label = "Year Range",
                                  min = 1990,
-                                 max = 2010,
-                                 value = c(1990, 2010))
+                                 max = 2017,
+                                 value = c(1990, 2017))
               )
               
             )
