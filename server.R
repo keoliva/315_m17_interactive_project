@@ -131,7 +131,8 @@ get_plot_keywords_top_freq <- function(dataset, n) {
 
 shinyServer(function(input, output) {
 
-  ##################### helper functions ######################
+##################### helper functions ######################
+  
     get_lower_tri <- function(cormat){
     cormat[upper.tri(cormat)] <- NA
     return(cormat)
@@ -241,7 +242,6 @@ shinyServer(function(input, output) {
   #------------------------------   Network   -------------------------------#
   output$network_plot <- renderVisNetwork({
   
-  output$network_plot <- renderPlot({
     library(ggplot2)
     library(dplyr)
     library(igraph)
