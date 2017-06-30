@@ -230,14 +230,15 @@ shinyServer(function(input, output) {
 
   #----------------------------   Time Series   ----------------------------#
   
-  output$time_series_plot <- renderDygraph({
-    
+  output$time_series_plot <- renderPlot({
+
     movies_by_year <- reactive({
       filter(movie_expanded, genre %in% input$checkedGenres) %>%
-        group_by(title_year, genre) %>% count(title_year) %>% spread(genre, n)
+        group_by(title_year, genre) %>% count(title_year) #%>% spread(genre, n)
     })
       
-    dygraph(movies_by_year(),  main = "Number of Movies Made Throughout the Years")
+    ggplot(movies_by_year(), aes(x = title_year, y = n)) + geom_line(aes(color = genre)) + 
+      labs(title = "Number of Movies Made Throughout the Years")
     
   })
   

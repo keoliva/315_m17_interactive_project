@@ -166,7 +166,7 @@ body <- dashboardBody(
               )
             ),
             fluidRow(
-              dygraphOutput(outputId = "time_series_plot", height = "300px")
+              plotOutput(outputId = "time_series_plot", height = "300px")
             )
     ),
     tabItem(tabName = "dendrogram",
