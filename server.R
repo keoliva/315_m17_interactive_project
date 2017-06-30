@@ -73,6 +73,8 @@ unnest_plot_keywords <- function() {
   return (dataset)
 }
 
+movies_plot_keywords <- unnest_plot_keywords()
+
 unnest_genres <- function() {
   dataset <- movies %>%
     mutate(genres = strsplit(genres, '\\|')) %>%
