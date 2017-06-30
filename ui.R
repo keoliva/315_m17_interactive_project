@@ -35,6 +35,7 @@ ratingChoices <- levels(fct_infreq(movie_expanded$content_rating))
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    menuItem("Grouped Bar Graph", icon = icon("th"), tabName = "bar"),
     menuItem("Correlation", icon = icon("th"), tabName = "correlation"),
     menuItem("Time Series", icon = icon("th"), tabName = "time_series"),
     menuItem("Network", icon = icon("th"), tabName = "network"),
@@ -96,6 +97,26 @@ body <- dashboardBody(
     tabItem(tabName = "dashboard",
             fluidRow(box(includeMarkdown("doc/about.md")),
                      tags$a(img(src="imdb-logo.jpg"), href="https://www.imdb.com"))
+    ),
+    
+    tabItem(tabName = "bar",
+            box(title = "Comparison of Movies based on Content Ratings",             
+                checkboxInput(inputId = "show_gross", 
+                              label = "Show Gross", 
+                              value = TRUE),
+                
+                checkboxInput(inputId = "show_budget", 
+                              label = "Show Budget", 
+                              value = TRUE),
+                
+                checkboxInput(inputId = "show_duration", 
+                              label = "Show Duration", 
+                              value = FALSE),
+                
+                checkboxInput(inputId = "show_score", 
+                              label = "Show IMDB Score", 
+                              value = FALSE)), 
+            plotOutput(outputId = "bar_plot", height = "600px")
     ),
     
     tabItem(tabName = "correlation",
