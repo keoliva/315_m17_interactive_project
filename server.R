@@ -233,7 +233,7 @@ shinyServer(function(input, output) {
   output$time_series_plot <- renderDygraph({
     
     movies_by_year <- reactive({
-      filter(m, genre %in% input$checkedGenres) %>%
+      filter(movie_expanded, genre %in% input$checkedGenres) %>%
         group_by(title_year, genre) %>% count(title_year) %>% spread(genre, n)
     })
       
