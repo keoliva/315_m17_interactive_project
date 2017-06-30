@@ -25,7 +25,8 @@ library(tidytext)
 library(tidyr)
 library(igraph)
 library(ggraph)
-library(networkD3)
+
+library(visNetwork)
 
 movie_expanded <- read.csv("data/movie_expanded.csv", header = T)
 
@@ -135,15 +136,12 @@ body <- dashboardBody(
     tabItem(tabName = "network",
             fluidRow(             
               box(title = "Network", status = "primary", solidHeader = TRUE,
-                  width = 12,
-                  selectInput(inputId = "v_method",
-                                        label = "Visualization Method:",
-                                        choices = c("Fruchterman–Reingold" = "fr", 
-                                                    "Kamada-Kawai" = "kk"),
-                                        selected = "kk"))),
+                  width = 12
+                  )),
               
            
-              plotOutput(outputId = "network_plot", height = "300px")
+            fluidPage(
+              visNetworkOutput("network_plot", height = "800px"))
             
     ),
             
