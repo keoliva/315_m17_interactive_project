@@ -19,11 +19,6 @@ library(networkD3)
 library(geomnet)
 
 
-# don't use this for final version
-# data_url <- paste("https://raw.githubusercontent.com/sundeepblue/movie_",
-#                   "rating_prediction/master/movie_metadata.csv", sep = "")
-# movie <- read.csv(data_url, header = T)
-
 
 theme_315 <- function(angle = 90) { 
   theme_bw() +
@@ -167,6 +162,35 @@ shinyServer(function(input, output) {
       hi <- max(cormat)
     }
     
+    lower_tri_melted <- lower_tri_melted %>%
+      mutate(Var1 = fct_recode(Var1, "title year" = "title_year",
+                               "facenumber in poster" = "facenumber_in_poster",
+                               "actor 1 facebook likes" = "actor_1_facebook_likes",
+                               "actor 2 facebook likes" = "actor_2_facebook_likes",
+                               "actor 3 facebook likes" = "actor_3_facebook_likes",
+                               "director facebook likes" = "director_facebook_likes",
+                               "num voted users" = "num_voted_users",
+                               "imdb score" = "imdb_score",
+                               "num critic for reviews" = "num_critic_for_reviews",
+                               "cast total facebook likes" = "cast_total_facebook_likes",
+                               "num critic for reviews" = "num_critic_for_reviews",
+                               "num user for reviews" = "num_user_for_reviews",
+                               "movie facebook likes" = "movie_facebook_likes"
+                               ),
+             Var2 = fct_recode(Var2, "title year" = "title_year",
+                               "facenumber in poster" = "facenumber_in_poster",
+                               "actor 1 facebook likes" = "actor_1_facebook_likes",
+                               "actor 2 facebook likes" = "actor_2_facebook_likes",
+                               "actor 3 facebook likes" = "actor_3_facebook_likes",
+                               "director facebook likes" = "director_facebook_likes",
+                               "num voted users" = "num_voted_users",
+                               "imdb score" = "imdb_score",
+                               "num critic for reviews" = "num_critic_for_reviews",
+                               "cast total facebook likes" = "cast_total_facebook_likes",
+                               "num user for reviews" = "num_user_for_reviews",
+                               "movie facebook likes" = "movie_facebook_likes"
+             ))
+    
     p <- ggplot(data = lower_tri_melted, aes(Var2, Var1, fill = value))+
       geom_tile(color = "white") +
       # geom_tile(aes(color = value < cutoff)) +
@@ -289,11 +313,12 @@ shinyServer(function(input, output) {
     return(network)
     
   }, height = 400)
+  
   #------------------------------ Scatter Plot -----------------------------#
   output$scatter <- renderPlotly({
     m <- movie_expanded
     m$domestic <- with(m, country == "USA")
-    m <- filter(m, 0 < gross & num_user_for_reviews > 0)
+    m <- filter(m, 0 < gross & num_voted_users > 0)
     # m <- filter(m, genre %in% input$checkedGenres_scatter) 
     
     # m <- filter(m, content_rating %in% input$checkedRatings & 
@@ -301,7 +326,7 @@ shinyServer(function(input, output) {
     
     m <- filter(m, content_rating %in% input$checkedRatings)
     
-    p <- ggplot(m, aes(x = log(num_user_for_reviews), y = log(gross)))
+    p <- ggplot(m, aes(x = log(num_voted_users), y = log(gross)))
     
     
     if(!input$hide_points){
@@ -320,9 +345,9 @@ shinyServer(function(input, output) {
     p <- p + theme_bw() +
       scale_color_brewer(type = "qual", palette = "Set2", direction = -1) +
       coord_cartesian() +
-      labs(x = "Log transformed number of reviews",
+      labs(x = "Log transformed number of voted users",
            y = "Log transformed gross",
-           title = "Distribution of number of reviews versus gross")
+           title = "Distribution of number of votes versus gross in log scale")
     print(ggplotly(p, height = 600, width = 1000))
   })
 

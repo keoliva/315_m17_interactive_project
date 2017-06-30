@@ -34,15 +34,15 @@ ratingChoices <- levels(fct_infreq(movie_expanded$content_rating))
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Item 3", icon = icon("th"), tabName = "correlation"),
-    menuItem("Item 4", icon = icon("th"), tabName = "time_series"),
-    menuItem("Item 5", icon = icon("th"), tabName = "network"),
-    menuItem("Item 6", icon = icon("th"), tabName = "wordcloud"),
-    menuItem("Item 7", icon = icon("th"), tabName = "scatterplot")
+    menuItem("Correlation", icon = icon("th"), tabName = "correlation"),
+    menuItem("Time Series", icon = icon("th"), tabName = "time_series"),
+    menuItem("Network", icon = icon("th"), tabName = "network"),
+    menuItem("Wordcloud", icon = icon("th"), tabName = "wordcloud"),
+    menuItem("Scatter Plot", icon = icon("th"), tabName = "scatterplot")
   )
 )
 
+# not using this theme at the moment
 css_comps <- tags$head(tags$style(HTML('
         /* logo */
         .skin-blue .main-header .logo {
@@ -171,7 +171,7 @@ body <- dashboardBody(
             )
     ),
     tabItem(tabName = "scatterplot",
-            fluidRow(box(title = "Select Content Rating and year", status = "warning", solidHeader = T,
+            fluidRow(box(title = "Select Content Rating", status = "warning", solidHeader = T,
                          selectInput(inputId = "checkedRatings",
                                      multiple = T,
                                      label = "Content ratings are ordered from most common to rarest. Select content ratings to dispay:", 
@@ -199,8 +199,6 @@ body <- dashboardBody(
             ))
     )
   ))
-  
-
 
 # Put them together into a dashboardPage
 dashboardPage(
