@@ -233,7 +233,7 @@ shinyServer(function(input, output) {
   output$time_series_plot <- renderDygraph({
     
     movies_by_year <- reactive({
-      filter(m, genre %in% input$checkedGenres) %>%
+      filter(movie_expanded, genre %in% input$checkedGenres) %>%
         group_by(title_year, genre) %>% count(title_year) %>% spread(genre, n)
     })
       
@@ -552,8 +552,7 @@ shinyServer(function(input, output) {
              title = paste("Distribution of ", input$genre_variable, "of Each Genre",
                            "from ", input$year_range_genres[1],
                            " - ", input$year_range_genres[2])) +
-        theme_315() +
-        theme(axis.title.x = element_text(angle = 90))
+        theme(axis.text.x = element_text(angle = 90))
     } else {
       movies_genres %>%
         ggplot(aes(x = genres,
@@ -565,7 +564,6 @@ shinyServer(function(input, output) {
              title = paste("Distribution of ", input$genre_variable, "of Each Genre",
                            "from ", input$year_range_genres[1],
                            " - ", input$year_range_genres[2])) +
-        theme_315() +
         theme(axis.text.x = element_text(angle = 90))
     }
     
